@@ -1,0 +1,7 @@
+{
+    "headless": true,
+    "downloadsFolder": "./downloads",
+    "targetUrl": "result_url",
+    "waitTime": 10000
+}
+
