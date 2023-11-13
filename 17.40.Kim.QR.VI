@@ -1,0 +1,53 @@
+from pyzbar.pyzbar import decode
+from PIL import Image
+import requests
+
+# 함수: QR 코드 스캔 및 Virustotal에 URL 확인
+def scan_qr_code(image_url, virustotal_api_key):
+    response = requests.get(image_url)
+    
+    # 이미지 다운로드 및 열기
+    with open("test.jpg", "wb") as file:
+        file.write(response.content)
+    img = Image.open("test.jpg")
+    
+    # QR 코드 디코드
+    decoded_objects = decode(img)
+    
+    # QR 코드에서 URL 추출
+    qr_url = None
+    for obj in decoded_objects:
+        if obj.type == 'QRCODE':
+            qr_url = obj.data.decode('utf-8')
+            break
+    
+    if qr_url:
+        # Virustotal API 호출
+        virustotal_url = "https://www.virustotal.com/vtapi/v2/url/report"
+        params = {
+            'apikey': virustotal_api_key,
+            'resource': qr_url
+        }
+        response = requests.get(virustotal_url, params=params)
+
+        # 결과 확인
+        if response.status_code == 200:
+            result = response.json()
+            if result['response_code'] == 1:
+                print("URL이 Virustotal에서 확인되었습니다.")
+                print("결과:", result)
+            else:
+                print("URL이 Virustotal에서 확인되지 않았습니다.")
+        else:
+            print("Virustotal과의 연결에 문제가 있습니다.")
+    else:
+        print("QR 코드에서 URL을 추출할 수 없습니다.")
+
+# Virustotal API 키
+virustotal_api_key = 'e5525b2b31d0258c8d8db976662d0982bc69653a4b8ba9d9a38779e137a735cf'
+
+# QR 코드 이미지 URL
+qr_image_url = "https://www.kisia.or.kr/static/img/indexbanner/2023_1th_KISIA_HACKATHON.jpg"
+
+# 함수 호출
+scan_qr_code(qr_image_url, virustotal_api_key)
